@@ -1,0 +1,27 @@
+---
+name: Main
+env:
+  PROJECT_NAME: yggdrasil
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches: [main]
+jobs:
+  run_ansible:
+    name: Run ansible playbook
+    runs-on: self-hosted
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Run ansible playbook
+        env:
+          SSH_PORT: ${{ secrets.K3OS_SSH_PORT }}
+          SSH_KEY: ${{ secrets.K3OS_ANSIBLE_PRIVATE_KEY }}
+          ANSIBLE_VAULT_SECRET: ${{ secrets.ANSIBLE_VAULT_SECRET }}
+        run: |
+          echo "$SSH_KEY" > ~/.ssh/k3os_ansible_key && chmod 600 ~/.ssh/k3os_ansible_key
+          ansible-playbook \
+            -e "k3os_ssh_port=$SSH_PORT k3os_ansible_private_key=~/.ssh/k3os_ansible_key" \
+            --vault-id scripts/ansible-vault-secret.sh \
+            -i ansible/inventory.yml \
+            ansible/playbook.yml

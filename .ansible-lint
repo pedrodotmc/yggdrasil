@@ -1,0 +1,2 @@
+skip_list:
+  - deprecated-command-syntax  # Using command rather than an argument to e.g. file

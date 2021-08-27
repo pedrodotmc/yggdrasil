@@ -1,0 +1,5 @@
+---
+- name: Reboot Node
+  become: yes
+  raw: /usr/sbin/reboot
+  changed_when: false

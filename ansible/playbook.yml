@@ -1,0 +1,50 @@
+---
+- name: Set port and private key
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Set port and private key
+      set_fact:
+        ansible_port: "{{ k3os_ssh_port }}"
+        ansible_ssh_private_key_file: "{{ k3os_ansible_private_key }}"
+
+- name: Veryfy SSH port
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Check connection
+      raw: /bin/true
+      changed_when: false
+      ignore_unreachable: yes
+      no_log: true
+      register: connect_configured_port
+    - name: Set default port to 22 (connection to configured port was unreachable)
+      when: connect_configured_port.msg is defined and "Connection refused" in connect_configured_port.msg
+      set_fact:
+        ansible_port: 22
+
+- name: Provision configuration files
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Template sshd_config file to out/sshd_config
+      template:
+        src: sshd_config
+        dest: out/sshd_config
+        mode: 0644
+      run_once: true
+      delegate_to: localhost
+      changed_when: false
+    - name: Validate whether some config file changed
+      include_tasks: tasks/validate_file_changed.yml
+      loop:
+        - name: "{{ inventory_hostname }}.yaml"
+          src_path: files/k3os
+          dst: /var/lib/rancher/k3os/config.yaml
+        - name: sshd_config
+          src_path: out
+          dst: /var/lib/rancher/k3os/ssh/sshd_config
+      loop_control:
+        loop_var: config_file
+  handlers:
+    - include: handlers/main.yml

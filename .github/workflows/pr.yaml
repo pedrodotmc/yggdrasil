@@ -1,0 +1,27 @@
+---
+name: PR
+env:
+  PROJECT_NAME: yggdrasil
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  yamllint:
+    name: Yamllint
+    runs-on: ubuntu-20.04
+    container: cytopia/yamllint
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Check all YAML files with yamllint
+        run: find . -type f -name "*.yml" -o -name "*.yaml" | xargs yamllint -f colored -s
+  ansible_lint:
+    name: Ansible Lint
+    runs-on: ubuntu-20.04
+    container: cytopia/ansible-lint
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Check Ansible files with ansible-lint
+        run: ansible-lint ansible/playbook.yml

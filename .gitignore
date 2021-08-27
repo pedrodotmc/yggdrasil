@@ -1,0 +1,6 @@
+ansible/out/sshd_config
+^k3os/
+*.iso
+*.img
+*.pem
+output/
